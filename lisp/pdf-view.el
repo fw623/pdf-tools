@@ -1069,18 +1069,22 @@ It is equal to \(LEFT . TOP\) of the current slice in pixel."
                                (if slice
                                    (* (nth 2 slice)
                                       (car (image-size image)))
-                                 (car (image-size image))))))
+                                 (car (image-size image)))))
+             (width-offset (/ (- (window-width window) displayed-width) 2))
+             ;; No idea why 2/3, but window-height*2/3 centers the image
+             ;; correctly.
+             (height-offset (floor (* (/ 2.0 3.0) (window-body-height window)))))
         (setf (pdf-view-current-image window) image)
         (move-overlay ol (point-min) (point-max))
-        ;; In case the window is wider than the image, center the image
-        ;; horizontally.
+        ;; In case the window is wider or higher than the image, center the
+        ;; image.
         (overlay-put ol 'before-string
-                     (when (> (window-width window)
-                              displayed-width)
+                     (when (or (>= width-offset 1) (>= height-offset 1))
                        (propertize " " 'display
-                                   `(space :align-to
-                                           ,(/ (- (window-width window)
-                                                  displayed-width) 2)))))
+                                   `(space :align-to ,(when (>= width-offset 1)
+                                                        width-offset)
+                                           :height ,(when (>= height-offset 1)
+                                                      height-offset)))))
         (overlay-put ol 'display
                      (if slice
                          (list (cons 'slice
